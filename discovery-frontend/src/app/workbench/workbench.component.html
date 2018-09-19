@@ -349,7 +349,7 @@
               <!-- tab -->
               <!-- 결과 -->
               <div class="ddp-view-result">
-                <div loading #loading [visible]="true" [cancel]="true" (cancel)="setQueryCancel()" class="ddp-loading-part"></div>
+                <div loading #loading [visible]="isLoadingBarShow" [cancel]="true" (cancel)="setQueryCancel()" class="ddp-loading-part"></div>
 
                 <!--<div id="hiveLoadingText" style="display: none; padding:16px 24px;" [hidden]="(datagridCurList.length != 0) || (hiveLogs[selectedGridTabNum])"> Loading .... </div>-->
 

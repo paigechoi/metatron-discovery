@@ -325,6 +325,9 @@ export class WorkbenchComponent extends AbstractComponent implements OnInit, OnD
   // grid 값이 NO DATA  일 경우 icon show flag
   public isGridResultNoData :boolean = false;
 
+  // query loadingBar 보여줄지 말지 여부
+  public isLoadingBarShow: boolean = false;
+
   /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
    | Constructor
    |-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=*/
@@ -370,6 +373,10 @@ export class WorkbenchComponent extends AbstractComponent implements OnInit, OnD
       })
     });
     setTimeout(() => this.onEndedResizing(), 500);
+  }
+
+  public ngAfterViewInit() {
+    this.isLoadingBarShow = true;
   }
 
   /**
@@ -978,6 +985,7 @@ export class WorkbenchComponent extends AbstractComponent implements OnInit, OnD
 
   // 쿼리 실행
   public setExecuteSql(param: string) {
+    this.loadingBar.show();
     // $('#hiveLoadingText').show();
 
     // 호출횟수 증가
@@ -1845,6 +1853,7 @@ export class WorkbenchComponent extends AbstractComponent implements OnInit, OnD
           (this.hiveLogs[data.queryIndex]) || (this.hiveLogs[data.queryIndex] = { isShow: false, log: [] });
           const currHiveLog = this.hiveLogs[data.queryIndex];
           if ('LOG' === data.command) {
+            this.loadingBar.hide();
             currHiveLog.isShow = true;
             currHiveLog.log = currHiveLog.log.concat(data.log);
           } else if ('DONE' === data.command) {
