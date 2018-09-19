@@ -319,8 +319,8 @@ export class WorkbenchComponent extends AbstractComponent implements OnInit, OnD
   // 화면 로딩 완료
   public isHiveLog : boolean = false;
 
-  // 로그 취소 버튼
-  public isLogCancel : boolean = false;
+  // 로그 취소 탭 넘버
+  public isLogCancelTabNum : number[] = [];
 
   /*-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
    | Constructor
@@ -974,6 +974,8 @@ export class WorkbenchComponent extends AbstractComponent implements OnInit, OnD
 
   // 쿼리 실행
   public setExecuteSql(param: string) {
+    // $('#hiveLoadingText').show();
+
     // 호출횟수 증가
     this._executeSqlReconnectCnt++;
     // 보고있는 탭이 에러인경우 초기화
@@ -988,7 +990,7 @@ export class WorkbenchComponent extends AbstractComponent implements OnInit, OnD
     this.hiveLogs = [];
 
     // grid 초기화
-    this.isLogCancel = false;
+    this.isLogCancelTabNum = [];
     this.datagridCurList = [];
     this.tabGridNum = 0;
     this.selectedGridTabNum = 0;
@@ -1048,13 +1050,26 @@ export class WorkbenchComponent extends AbstractComponent implements OnInit, OnD
 
               //쿼리 실행
               this.loadingBar.show();
+
+              // hive log view show
+              if( this.mimeType == 'HIVE' ) {
+                (this.hiveLogs[0]) || (this.hiveLogs[0] = { isShow: true, log: [] });
+                // this.safelyDetectChanges();
+              }
+
               this.workbenchService.runSingleQueryWithInvalidQuery(queryEditor)
                 .then((result) => {
                   this.loadingBar.hide();
+                  // $('#hiveLoadingText').hide();
                   try {
-                    if( this.mimeType == 'HIVE' && this.isLogCancel ){
-                      this.isLogCancel = false;
-                      return false;
+                    if( this.mimeType == 'HIVE' && this.isLogCancelTabNum.length > 0 ){
+                      // cancel log 시 현재 탭의 데이터 제거
+                      for (let index: number = 0; index < this.isLogCancelTabNum.length; index++) {
+                        let tempResult : any = [];
+                        tempResult = result;
+                        tempResult.splice(this.isLogCancelTabNum[index], 1);
+                        result = tempResult;
+                      }
                     }
                     this.setDatagridData(result, tempSelectedTabNum);
                   } catch (e) {
@@ -1241,8 +1256,6 @@ export class WorkbenchComponent extends AbstractComponent implements OnInit, OnD
     this.saveLocalStorage(this.getSelectedTabText(), this.textList[this.selectedTabNum]['editorId']);
     // }
   }
-
-  public sql
 
   // 패널 사이즈 변경 - 드래그 한 후 사용자가 구분 기호를 놓을 때 발생
   public onEndedResizing(): void {
@@ -1804,6 +1817,24 @@ export class WorkbenchComponent extends AbstractComponent implements OnInit, OnD
         = CommonConstant.stomp.subscribe('/user/queue/workbench/' + this.workbenchId, (data) => {
 
         if ('HIVE' === this.mimeType && !isNullOrUndefined(data.queryIndex)) {
+
+          let isPassLogData : boolean = false;
+
+          // log pass
+          if( this.isLogCancelTabNum.length > 0 ){
+            for (let index: number = 0; index < this.isLogCancelTabNum.length; index++) {
+              if( this.isLogCancelTabNum[index] == data.queryIndex ){
+                isPassLogData = true;
+                break;
+              }
+            }
+          }
+
+          // 취소된 로그 데이터 통과
+          if( isPassLogData ){
+            return false;
+          }
+
           (this.hiveLogs[data.queryIndex]) || (this.hiveLogs[data.queryIndex] = { isShow: false, log: [] });
           const currHiveLog = this.hiveLogs[data.queryIndex];
           if ('LOG' === data.command) {
@@ -1812,13 +1843,17 @@ export class WorkbenchComponent extends AbstractComponent implements OnInit, OnD
           } else if ('DONE' === data.command) {
             currHiveLog.isShow = false;
             // currHiveLog.log = [];
-            if( this.datagridCurList.length > 0 && !this.isLogCancel ){
+            if( this.datagridCurList.length > 0 && this.isLogCancelTabNum.length == 0 ){
               this.safelyDetectChanges();
               this.drawGridData(0);
             }
           }
-          if( !this.isLogCancel ) {
+          if( this.isLogCancelTabNum.length == 0 ) {
             this.safelyDetectChanges();
+            // log data 가 있을경우 scroll 이동
+            if ( $('#workbenchHiveLogText').text() != '' ){
+              $('#workbenchHiveLogText').scrollTop($(document).height());
+            }
           }
         }
 

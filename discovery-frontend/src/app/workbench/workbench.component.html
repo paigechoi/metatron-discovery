@@ -351,13 +351,15 @@
               <div class="ddp-view-result">
                 <div loading #loading [visible]="mimeType !== 'HIVE'" [cancel]="true" (cancel)="setQueryCancel()" class="ddp-loading-part"></div>
 
+                <!--<div id="hiveLoadingText" style="display: none; padding:16px 24px;" [hidden]="(datagridCurList.length != 0) || (hiveLogs[selectedGridTabNum])"> Loading .... </div>-->
+
                 <!-- Hive Log 표시 영역 -->
                 <div *ngIf="hiveLogs[selectedGridTabNum] && hiveLogs[selectedGridTabNum].isShow" class="ddp-wrap-result" >
 
                   <div class="ddp-ui-setting">
                     <div class="ddp-ui-buttons">
 
-                      <a *ngIf="isHiveLog" href="javascript:" class="ddp-btn-box" (click)="isLogCancel = true; tabGridCloseHandler(selectedGridTabNum)">
+                      <a *ngIf="isHiveLog" href="javascript:" class="ddp-btn-box" (click)="isLogCancelTabNum.push(selectedGridTabNum); tabGridCloseHandler(selectedGridTabNum)">
                         <em class="ddp-icon-cancel"></em>
                         <div class="ddp-ui-tooltip-info">
                           <em class="ddp-icon-view-top"></em>
@@ -377,7 +379,7 @@
                   </div>
 
                   <div class="ddp-box-grid">
-                    <div class="ddp-text-result"
+                    <div id="workbenchHiveLogText" class="ddp-text-result"
                          [innerHTML]="hiveLogs[selectedGridTabNum].log.join('<br>')"></div>
                   </div>
                 </div>
